@@ -27,7 +27,7 @@ app.config['UPLOAD_FOLDER'] = 'uploads/'
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-client = OpenAI(api_key ='sk-proj-95KqsmI8HZ30IQQwuI78T3BlbkFJ1XXVqXUq8HhAtXC5iUao')
+client = OpenAI(api_key ='settings')
 MODEL="gpt-4o"
 #detector = dlib.cnn_face_detection_model_v1("./mmod_human_face_detector.dat")
 conf_thres = 0.6
