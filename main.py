@@ -18,6 +18,8 @@ from flask import Flask, request, jsonify
 from threading import Thread
 import firebase_admin
 from firebase_admin import firestore
+from firebase_admin import credentials
+
 import pathlib
 
 
@@ -33,6 +35,10 @@ MODEL="gpt-4o"
 conf_thres = 0.6
 
 model = load_model('vgg16_10epoch_face_cnn_model_v2.h5')
+
+
+cred = credentials.Certificate("key.json")
+firebase_admin.initialize_app(cred)
 
 face_label_filename = 'vgg16_10epoch_face_label_v2.pickle'
 with open(face_label_filename, "rb") as f: class_dictionary = pickle.load(f)
@@ -199,12 +205,18 @@ def detect_object(frames):
 #       seller = name.split("-")[0]
 #   return buyer, seller
 
+def update_database(buyer, seller, product):
+   db = firestore.client()
+   doc_ref = db.collection("transactions").document()
+   doc_ref.set({"cashier": seller, "buyer": buyer, "product": product  })
 
 def process_video(video_path):
    frames = extract_frames(video_path)
    is_transaction = detect_purchase(MODEL, frames)
    if is_transaction == True:
       product = detect_object(frames)
+    #   buyer, seller = identify_people(frames)
+    #   update_database(buyer, seller, product)
       print(product)
       return    
 
