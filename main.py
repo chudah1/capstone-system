@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import pickle
 import torch
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from threading import Thread
 import firebase_admin
 from firebase_admin import firestore
@@ -25,6 +26,8 @@ import pathlib
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
+
+CORS(app)
 
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -47,7 +50,7 @@ class_list = [value for _, value in class_dictionary.items()]
 
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
-obj_detection_model = torch.hub.load('ultralytics/yolov5', 'custom', path='best_v5_6.pt')
+obj_detection_model = torch.hub.load('ultralytics/yolov5', 'custom', path='best_v5_3.pt')
 
 
 def extract_frames(video_path, seconds_per_frame=1):
@@ -172,8 +175,7 @@ def detect_object(frames):
       label = f'{obj_detection_model.names[int(cls)]} {conf:.2f}'
     if object_detection_count>=2:
       break
-  return label.split(" ")[0]
-
+    return label.split(" ")[0]
 # def predict_faces(frame, model, class_names):
 #     face_locations = detect_faces_mmod(frame)
 #     face_names = []
@@ -212,12 +214,12 @@ def update_database(buyer, seller, product):
 
 def process_video(video_path):
    frames = extract_frames(video_path)
-   is_transaction = detect_purchase(MODEL, frames)
+   #is_transaction = detect_purchase(MODEL, frames)
+   is_transaction = True
    if is_transaction == True:
       product = detect_object(frames)
-    #   buyer, seller = identify_people(frames)
-    #   update_database(buyer, seller, product)
-      print(product)
+    # buyer, seller = identify_people(frames)
+      # update_database("Test", "Test", product)
       return    
 
 
