@@ -48,9 +48,7 @@ with open(face_label_filename, "rb") as f: class_dictionary = pickle.load(f)
 class_list = [value for _, value in class_dictionary.items()]
 
 
-temp = pathlib.PosixPath
-pathlib.PosixPath = pathlib.WindowsPath
-obj_detection_model = torch.hub.load('ultralytics/yolov5', 'custom', path='best_v5_3.pt')
+obj_detection_model = torch.hub.load('ultralytics/yolov5', 'custom', path='best_v5_7.pt')
 
 
 def extract_frames(video_path, seconds_per_frame=1):
