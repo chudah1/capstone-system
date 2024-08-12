@@ -86,7 +86,7 @@ Before running the project, ensure you have the following installed:
 
 ```bash
 ├── .env                # Environment variables
-├── app.py              # Flask application entry point
+├── main.py              # Flask application entry point
 ├── requirements.txt    # Python dependencies
 ├── key.json            # Firestore service account key
 ├── flutter_app/        # Flutter application directory
