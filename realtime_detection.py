@@ -5,6 +5,7 @@ import os
 import requests
 
 
+host_machine = os.environ["IP_ADDRESS"]
 def capture_video():
     cap = cv2.VideoCapture(0)
     frame_buffer = deque()
@@ -13,10 +14,10 @@ def capture_video():
         ret, frame = cap.read()
         if ret:
             frame_buffer.append(frame)
-            if time.time() - start_time >= 10:
+            if time.time() - start_time >= 6:
                 video_path = "transaction_video.mp4"
                 combine_frames_to_video(list(frame_buffer), video_path)
-                status_code, response_text = upload_video_to_api(video_path, "http://127.0.0.1:5000/process_video")
+                status_code, response_text = upload_video_to_api(video_path, "http://host_machine/process_video")
                 print(f"Uploaded with status code {status_code}: {response_text}")
                 frame_buffer.clear()
                 start_time = time.time()
