@@ -9,7 +9,7 @@ from keras.models import load_model
 from keras.applications.mobilenet import preprocess_input
 from PIL import Image
 from openai import OpenAI
-#import dlib
+import dlib
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -32,9 +32,9 @@ CORS(app)
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-client = OpenAI(api_key ='settings')
+client = OpenAI(api_key = os.environ["API_KEY"])
 MODEL="gpt-4o"
-#detector = dlib.cnn_face_detection_model_v1("./mmod_human_face_detector.dat")
+detector = dlib.cnn_face_detection_model_v1("./mmod_human_face_detector.dat")
 conf_thres = 0.6
 
 model = load_model('vgg16_10epoch_face_cnn_model_v2.h5')
@@ -80,7 +80,7 @@ def detect_purchase(model, frames):
       model=model,
       messages=[
       {"role":"system", "content":"You are a machine that only returns and replies with valid, iterable RFC8259 compliant JSON in your responses" },
-      {"role": "system", "content": "You are classifying a video as whether the purchase of item(s) occured. Return a json without any '```json' with a description field summarizing the video and a tansaction field indicating a True or False of if a purchase occured."},
+      {"role": "system", "content": "You are classifying a video as whether the purchase of item(s) occured. Return a json qwith a description field summarizing the video and a tansaction field indicating a True or False of if a purchase occured."},
       {"role": "user", "content": [
           "These are the frames from the video.",
           *map(lambda x: {"type": "image_url",
@@ -101,63 +101,63 @@ def decode_base64_frame(base64_frame):
     image = cv2.imdecode(np_data, cv2.IMREAD_COLOR)
     return image
 
-# def extractFace(image, x1, x2, y1, y2):
-#     image_array = np.asarray(image, "uint8")
-#     y_min = min(y1, y2)
-#     y_max = max(y1, y2)
-#     x_min = min(x1, x2)
-#     x_max = max(x1, x2)
-#     face = image_array[y_min:y_max, x_min:x_max]
-#     try:
-#         face = cv2.resize(face, (224, 224) )
-#         face_array = np.asarray(face,  "uint8")
-#         return face_array
-#     except:
-#         return None
+def extractFace(image, x1, x2, y1, y2):
+    image_array = np.asarray(image, "uint8")
+    y_min = min(y1, y2)
+    y_max = max(y1, y2)
+    x_min = min(x1, x2)
+    x_max = max(x1, x2)
+    face = image_array[y_min:y_max, x_min:x_max]
+    try:
+        face = cv2.resize(face, (224, 224) )
+        face_array = np.asarray(face,  "uint8")
+        return face_array
+    except:
+        return None
     
 
-# def detectFace(image):
-#     image_array = np.asarray(image, "uint8")
-#     faces_detected = detector(image_array)
-#     if len(faces_detected) == 0:
-#         return []
-#     faces_extracted = []
+def detectFace(image):
+    image_array = np.asarray(image, "uint8")
+    faces_detected = detector(image_array)
+    if len(faces_detected) == 0:
+        return []
+    faces_extracted = []
 
-#     for face in faces_detected:
+    for face in faces_detected:
 
-#         conf = face.confidence
-#         if conf < conf_thres:
-#             continue
+        conf = face.confidence
+        if conf < conf_thres:
+            continue
 
-#         x1 = face.rect.left()
-#         y1 = face.rect.bottom()
-#         x2 = face.rect.right()
-#         y2 = face.rect.top()
-
-
-#         face_array = extractFace(image, x1, x2, y1, y2)
-#         if face_array is not None:
-#             faces_extracted.append(face_array)
-
-#     return faces_extracted
-
-# def preprocess_image(image):
-#     image = cv2.resize(image, (224, 224))
-#     image = image.astype('float32')
-#     image = np.expand_dims(image, axis=0)
-#     image = preprocess_input(image)
-#     return image
-
-# def preprocess_frame(frame):
-#     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
-#     return cv2.equalizeHist(gray) 
+        x1 = face.rect.left()
+        y1 = face.rect.bottom()
+        x2 = face.rect.right()
+        y2 = face.rect.top()
 
 
-# def detect_faces_mmod(frame):
-#     rgb_frame = preprocess_frame(frame)
-#     detections = detector(rgb_frame, 2)
-#     face_locations_mmod = [(d.rect.top(), d.rect.right(), d.rect.bottom(), d.rect.left()) for d in detections]
-#     return face_locations_mmod
+        face_array = extractFace(image, x1, x2, y1, y2)
+        if face_array is not None:
+            faces_extracted.append(face_array)
+
+    return faces_extracted
+
+def preprocess_image(image):
+    image = cv2.resize(image, (224, 224))
+    image = image.astype('float32')
+    image = np.expand_dims(image, axis=0)
+    image = preprocess_input(image)
+    return image
+
+def preprocess_frame(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
+    return cv2.equalizeHist(gray) 
+
+
+def detect_faces_mmod(frame):
+    rgb_frame = preprocess_frame(frame)
+    detections = detector(rgb_frame, 2)
+    face_locations_mmod = [(d.rect.top(), d.rect.right(), d.rect.bottom(), d.rect.left()) for d in detections]
+    return face_locations_mmod
 
 def detect_object(frames):
   label = ""
@@ -176,36 +176,37 @@ def detect_object(frames):
     if object_detection_count>=2:
       break
     return label.split(" ")[0]
-# def predict_faces(frame, model, class_names):
-#     face_locations = detect_faces_mmod(frame)
-#     face_names = []
-#     for (top, right, bottom, left) in face_locations:
-#         face_image = frame[top:bottom, left:right]
-#         face_image = preprocess_image(face_image)
+    
+def predict_faces(frame, model, class_names):
+    face_locations = detect_faces_mmod(frame)
+    face_names = []
+    for (top, right, bottom, left) in face_locations:
+        face_image = frame[top:bottom, left:right]
+        face_image = preprocess_image(face_image)
 
-#         predictions = model.predict(face_image)
-#         best_class = np.argmax(predictions)
-#         name = class_names[best_class]
-#         face_names.append(name)
-#     return face_names
+        predictions = model.predict(face_image)
+        best_class = np.argmax(predictions)
+        name = class_names[best_class]
+        face_names.append(name)
+    return face_names
 
-# def identify_people(frames):
-#   buyer, seller = None, None
-#   face_detection_count = 0
-#   face_names = []
-#   for frame in frames:
-#     frame = decode_base64_frame(frame)
-#     face_names =  predict_faces(frame, model, class_list)
-#     if (len(face_names) >= 2):
-#       face_detection_count += 1
-#     if face_detection_count>=2:
-#       break
-#   for name in face_names:
-#     if "buyer" in name.lower():
-#       buyer = name.split("-")[0]
-#     elif "seller" in name.lower():
-#       seller = name.split("-")[0]
-#   return buyer, seller
+def identify_people(frames):
+  buyer, seller = None, None
+  face_detection_count = 0
+  face_names = []
+  for frame in frames:
+    frame = decode_base64_frame(frame)
+    face_names =  predict_faces(frame, model, class_list)
+    if (len(face_names) >= 2):
+      face_detection_count += 1
+    if face_detection_count>=2:
+      break
+  for name in face_names:
+    if "buyer" in name.lower():
+      buyer = name.split("-")[0]
+    elif "seller" in name.lower():
+      seller = name.split("-")[0]
+  return buyer, seller
 
 def update_database(buyer, seller, product):
    db = firestore.client()
@@ -214,12 +215,11 @@ def update_database(buyer, seller, product):
 
 def process_video(video_path):
    frames = extract_frames(video_path)
-   #is_transaction = detect_purchase(MODEL, frames)
-   is_transaction = True
+   is_transaction = detect_purchase(MODEL, frames)
    if is_transaction == True:
       product = detect_object(frames)
-    # buyer, seller = identify_people(frames)
-      # update_database("Test", "Test", product)
+      buyer, seller = identify_people(frames)
+      update_database(buyer, seller, product)
       return    
 
 
